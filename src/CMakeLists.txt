@@ -25,6 +25,9 @@ add_executable(src
 
     player.h
     player.c
+
+    hud.h
+    hud.c
 )
 
 target_link_libraries(src raylib)
@@ -34,6 +37,7 @@ if (APPLE)
     target_link_libraries(src "-framework OpenGL")
 endif()
 target_link_libraries(src cLDtk)
+target_link_libraries(src Physac)
 
 add_custom_target(copy_resources ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory

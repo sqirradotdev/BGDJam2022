@@ -29,6 +29,11 @@ typedef struct Player
     int current_frame;
     int frames_counter;
     int frame_speed;
+
+    unsigned int max_hp;
+    unsigned int hp;
+
+    bool dash_used;
 } Player;
 
 Player* player_new(PlayerCharacter player_character);

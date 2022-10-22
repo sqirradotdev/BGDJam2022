@@ -10,6 +10,7 @@
 #include "../core/sprite.h"
 
 #include "cLDtk.h"
+#include "physac.h"
 
 // Textures
 static Texture2D map_texture;
@@ -33,14 +34,14 @@ void state_main_enter()
 
     camera = (Camera2D) { 0 };
 
-    map_texture = LoadTexture("./resources/textures/SunnyLand_by_Ansimuz.png");
+    map_texture = LoadTexture("./resources/textures/tileset.png");
 
     loadJSONFile("{\"jsonVersion\":\"\"}", "./resources/maps/map.json");
     importMapData();
 
-    lvl_one = getLevel("Level_1");
-    lvl_one_background = getLayer("Bg_textures", lvl_one->uid);
-    lvl_one_collisions = getLayer("Collisions", lvl_one->uid);
+    lvl_one = getLevel("level0");
+    lvl_one_background = getLayer("bg", lvl_one->uid);
+    lvl_one_collisions = getLayer("col", lvl_one->uid);
 
     camera.offset = (Vector2) { -20.0 + INIT_VIEWPORT_WIDTH * 0.5, INIT_VIEWPORT_HEIGHT * 0.5, };
     camera.rotation = 0.0f;
@@ -124,4 +125,9 @@ static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color t
 
         DrawTexturePro(texture, src_rect, dst_rect, origin, 0.0f, tint);
     }
+}
+
+static void _draw_hud()
+{
+
 }

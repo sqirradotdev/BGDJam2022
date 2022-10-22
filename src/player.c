@@ -19,8 +19,11 @@ Player* player_new(PlayerCharacter player_character)
     {
         default:
             player_texture = LoadTexture("./resources/textures/char0.png");
+            player->max_hp = 3;
             break;
     }
+
+    player->hp = player->max_hp;
 
     player->sprite = sprite_new(player_texture);
     player->sprite->origin.x = 9;
@@ -33,34 +36,48 @@ Player* player_new(PlayerCharacter player_character)
     player->frames_counter = 0;
     player->frame_speed = 8;
 
+    player->dash_used = false;
+
     return player;
 }
 
 void player_update(Player* player, struct layerInstances* map_col_layer)
 {
-    float player_input = (IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)) * PLAYER_ACCEL_SPEED;
+    Vector2 temp_velocity = player->velocity;
+    Vector2 temp_position = player->position;
+
+    float player_input = ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) - (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))) * PLAYER_ACCEL_SPEED;
     if (player_input != 0)
     {
-        player->velocity.x += player_input;
-        if (fabs(player->velocity.x) > PLAYER_MAX_SPEED)
-            player->velocity.x = PLAYER_MAX_SPEED * copysignf(1.0, player->velocity.x);
+        // accel
+        temp_velocity.x += player_input;
+        if (fabs(temp_velocity.x) > PLAYER_MAX_SPEED)
+            temp_velocity.x = PLAYER_MAX_SPEED * copysignf(1.0, player->velocity.x);
 
         player->sprite->flip_x = (player_input < 0);
-
         _change_player_state(player, PLAYER_MOVING);
     }
     else
     {
-        if (fabs(player->velocity.x) > 0.5)
-            player->velocity.x += PLAYER_DEACCEL_SPEED * -copysignf(1.0, player->velocity.x);
+        // deaccel
+        if (fabs(temp_velocity.x) > 0.5)
+            temp_velocity.x += PLAYER_DEACCEL_SPEED * -copysignf(1.0, temp_velocity.x);
         else
-            player->velocity.x = 0.0;
+            temp_velocity.x = 0.0;
 
         _change_player_state(player, PLAYER_IDLE);
     }
 
-    bool on_floor = false;
-    float y_snap_to;
+    bool trying_to_jump = IsKeyPressed(KEY_SPACE);
+
+    temp_velocity.y += GRAVITY;
+    if (fabs(temp_velocity.y) > PLAYER_TERMINAL_VELOCITY)
+        temp_velocity.y = PLAYER_TERMINAL_VELOCITY * copysignf(1.0, temp_velocity.y);
+
+    temp_position.x += temp_velocity.x;
+    temp_position.y += temp_velocity.y;
+
+    bool touching_ground = false;
     for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
     {
         Rectangle tile_rect = {
@@ -70,34 +87,68 @@ void player_update(Player* player, struct layerInstances* map_col_layer)
             TILE_OFFSET
         };
 
-        Rectangle player_rect = (Rectangle) {
-            player->position.x - player->sprite->origin.x,
-            player->position.y - player->sprite->origin.y,
-            18,
-            18
-        };
-
-        if (CheckCollisionRecs(player_rect, tile_rect))
+        for (int i = 0; i < 2; i++)
         {
-            on_floor = true;
-            y_snap_to = tile_rect.y;
+            Rectangle player_rect = (Rectangle) {
+                temp_position.x - 6,
+                temp_position.y - 14,
+                12,
+                14
+            };
+
+            if (CheckCollisionRecs(player_rect, tile_rect))
+            {
+                Rectangle col_rec = GetCollisionRec(player_rect, tile_rect);
+                //TraceLog(LOG_INFO, "py: %f, x: %f, y: %f, w: %f, h: %f", player_rect.y, col_rec.x, col_rec.y, col_rec.width, col_rec.height);
+
+                // cant be bothered optimizing tbh
+
+                if (i == 0)
+                {
+                    float p = player_rect.y + player_rect.height;
+                    if ((p >= col_rec.y && p <= col_rec.y + col_rec.height) && temp_velocity.y > 0.0)
+                    {
+                        temp_position.y -= col_rec.height;
+                        temp_velocity.y = 0.0;
+
+                        touching_ground = true;
+                    }
+
+                    p = player_rect.y;
+                    if ((p >= col_rec.y && p <= col_rec.y + col_rec.height) && temp_velocity.y < 0.0)
+                    {
+                        temp_position.y += col_rec.height;
+                        temp_velocity.y = 0.0;
+                    }
+                }
+                else                
+                {
+                    float p = player_rect.x + player_rect.width;
+                    if ((p >= col_rec.x && p <= col_rec.x + col_rec.width) && temp_velocity.x > 0.0)
+                    {
+                        temp_position.x -= col_rec.width;
+                        temp_velocity.x = 0.0;
+                    }
+
+                    p = player_rect.x;
+                    if ((p >= col_rec.x && p <= col_rec.x + col_rec.width) && temp_velocity.x < 0.0)
+                    {
+                        temp_position.x += col_rec.width;
+                        temp_velocity.x = 0.0;
+                    }
+                }
+            }
         }
     }
 
-    if (on_floor)
+    if (touching_ground)
     {
-        player->position.y = y_snap_to;
-        player->velocity.y = 0;
-    }
-    else
-    {
-        player->velocity.y += GRAVITY;
-        if (fabs(player->velocity.y) > PLAYER_TERMINAL_VELOCITY)
-            player->velocity.y = PLAYER_TERMINAL_VELOCITY * copysignf(1.0, player->velocity.y);
+        if (trying_to_jump)
+            temp_velocity.y = -3.5;
     }
 
-    player->position.x += player->velocity.x;
-    player->position.y += player->velocity.y;
+    player->position = temp_position;
+    player->velocity = temp_velocity;
 
     player->sprite->position = player->position;
 }
