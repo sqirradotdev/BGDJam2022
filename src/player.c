@@ -23,7 +23,7 @@ Player* player_new(PlayerCharacter player_character)
             break;
     }
 
-    player->hp = player->max_hp;
+    player->hp = player->max_hp - 1;
 
     player->sprite = sprite_new(player_texture);
     player->sprite->origin.x = 9;

@@ -6,6 +6,7 @@
 
 #include "../constants.h"
 #include "../player.h"
+#include "../hud.h"
 #include "state.h"
 #include "../core/sprite.h"
 
@@ -16,11 +17,15 @@
 static Texture2D map_texture;
 
 // Map
-static struct levels *lvl_one;
-static struct layerInstances *lvl_one_background;
-static struct layerInstances *lvl_one_collisions;
+static struct levels *level;
+static struct layerInstances *level_bg;
+static struct layerInstances *level_col;
+static struct entityInstances *level_players;
+static struct entityInstances *level_chests;
 
 Player* player;
+
+HUD* hud;
 
 Camera2D camera = { 0 };
 
@@ -30,18 +35,22 @@ static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color t
 
 void state_main_enter()
 {
+    map_texture = LoadTexture("./resources/textures/tileset.png");
+    
     player = player_new(PLAYERCHAR_0);
 
-    camera = (Camera2D) { 0 };
+    hud = hud_new(player);
 
-    map_texture = LoadTexture("./resources/textures/tileset.png");
+    camera = (Camera2D) { 0 };
 
     loadJSONFile("{\"jsonVersion\":\"\"}", "./resources/maps/map.json");
     importMapData();
 
-    lvl_one = getLevel("level0");
-    lvl_one_background = getLayer("bg", lvl_one->uid);
-    lvl_one_collisions = getLayer("col", lvl_one->uid);
+    level = getLevel("level0");
+    level_bg = getLayer("bg", level->uid);
+    level_col = getLayer("col", level->uid);
+    level_players = getEntity("player", level->uid);
+    level_chests = getEntity("chest", level->uid);
 
     camera.offset = (Vector2) { -20.0 + INIT_VIEWPORT_WIDTH * 0.5, INIT_VIEWPORT_HEIGHT * 0.5, };
     camera.rotation = 0.0f;
@@ -58,7 +67,8 @@ void state_main_update()
     if (IsKeyPressed(KEY_R))
         state_restart();
 
-    player_update(player, lvl_one_collisions);
+    player_update(player, level_col);
+    hud_update(hud);
 
     Vector2 target = {
         player->position.x - player->sprite->origin.x,
@@ -75,17 +85,20 @@ void state_main_draw()
 {
     ClearBackground(BLACK);
     BeginMode2D(camera);
-        _draw_tiles(lvl_one_background, map_texture, WHITE);
-        _draw_tiles(lvl_one_collisions, map_texture, WHITE);
+        _draw_tiles(level_bg, map_texture, WHITE);
+        _draw_tiles(level_col, map_texture, WHITE);
 
         player_draw(player);
     EndMode2D();
+
+    hud_draw(hud);
 }
 
 void state_main_exit()
 {
     UnloadMusicStream(bgm);
     player_destroy(player);
+    hud_destroy(hud);
     freeMapData();
     UnloadTexture(map_texture);
     json_value_free(schema);

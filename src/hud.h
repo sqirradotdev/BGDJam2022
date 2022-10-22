@@ -11,7 +11,12 @@ typedef struct HUD
     Player* player;
     Texture2D hearts_texture;
 
-    List* sprite_list;
+    int h_blink_frames_counter;
 } HUD;
+
+HUD* hud_new(Player* player);
+void hud_update(HUD* hud);
+void hud_draw(HUD* hud);
+void hud_destroy(HUD* hud);
 
 #endif
