@@ -33,6 +33,7 @@ typedef struct Player
     unsigned int max_hp;
     unsigned int hp;
 
+    bool jump_used;
     bool dash_used;
 } Player;
 

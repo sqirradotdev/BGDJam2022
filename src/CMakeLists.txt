@@ -15,6 +15,8 @@ add_executable(src
 
     util/list.h
     util/list.c
+    util/formatter.h
+    util/formatter.c
 
     state/state.h
     state/state.c

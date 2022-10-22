@@ -7,6 +7,8 @@
 #include "../constants.h"
 #include "../player.h"
 #include "../hud.h"
+#include "../util/formatter.h"
+#include "../global_resources.h"
 #include "state.h"
 #include "../core/sprite.h"
 
@@ -75,6 +77,7 @@ void state_main_update()
 
     player_update(player, level_col);
     hud_update(hud);
+
     _update_camera(true);
 }
 
@@ -93,6 +96,7 @@ void state_main_draw()
         player_draw(player);
     EndMode2D();
     hud_draw(hud);
+    DrawTextPro(gr_small_font, formatter_vector2(player->velocity), (Vector2) {0.0, 0.0}, (Vector2) {0.0, 0.0}, 0, gr_small_font.baseSize, 0, WHITE);
 }
 
 void state_main_exit()

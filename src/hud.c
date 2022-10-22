@@ -23,7 +23,7 @@ void hud_update(HUD* hud)
             reset_at = 30;
             break;
         case 2:
-            reset_at = 120;
+            reset_at = 100;
             break;
         default:
             reset_at = 150;
@@ -46,7 +46,7 @@ void hud_draw(HUD* hud)
         if (i >= hud->player->hp)
         {
             src_rect.y = height * 1;
-            if (hud->h_blink_frames_counter <= 15)
+            if (hud->h_blink_frames_counter <= 10)
                 src_rect.y = height * 2;
         }
         Rectangle dst_rect = { 7 + i * (hud->hearts_texture.width + 1), INIT_VIEWPORT_HEIGHT - height - 7, hud->hearts_texture.width, height };
