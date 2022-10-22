@@ -22,6 +22,7 @@ static struct layerInstances *level_bg;
 static struct layerInstances *level_col;
 static struct entityInstances *level_players;
 static struct entityInstances *level_chests;
+static int current_level = 1;
 
 Player* player;
 
@@ -32,6 +33,7 @@ Camera2D camera = { 0 };
 static Music bgm;
 
 static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color tint);
+static void _update_camera(bool lerp);
 
 void state_main_enter()
 {
@@ -46,15 +48,19 @@ void state_main_enter()
     loadJSONFile("{\"jsonVersion\":\"\"}", "./resources/maps/map.json");
     importMapData();
 
-    level = getLevel("level0");
+    level = getLevel(TextFormat("level%i", current_level));
     level_bg = getLayer("bg", level->uid);
     level_col = getLayer("col", level->uid);
     level_players = getEntity("player", level->uid);
     level_chests = getEntity("chest", level->uid);
 
+    player->position = (Vector2) { level_players[0].x, level_players[0].y };
+
     camera.offset = (Vector2) { -20.0 + INIT_VIEWPORT_WIDTH * 0.5, INIT_VIEWPORT_HEIGHT * 0.5, };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
+
+    _update_camera(false);
 
     bgm = LoadMusicStream("./resources/bgm/where_visions_overlap.xm");
     PlayMusicStream(bgm);
@@ -69,28 +75,23 @@ void state_main_update()
 
     player_update(player, level_col);
     hud_update(hud);
-
-    Vector2 target = {
-        player->position.x - player->sprite->origin.x,
-        player->position.y - player->sprite->origin.y
-    };
-
-    camera.target = (Vector2) {
-        floorf(Lerp(camera.target.x, target.x, 0.1)),
-        floorf(Lerp(camera.target.y, target.y, 0.1))
-    };
+    _update_camera(true);
 }
 
 void state_main_draw()
 {
     ClearBackground(BLACK);
     BeginMode2D(camera);
-        _draw_tiles(level_bg, map_texture, WHITE);
-        _draw_tiles(level_col, map_texture, WHITE);
+        if (current_level == 0)
+        {
 
+        }
+        else
+            _draw_tiles(level_bg, map_texture, WHITE);
+
+        _draw_tiles(level_col, map_texture, WHITE);
         player_draw(player);
     EndMode2D();
-
     hud_draw(hud);
 }
 
@@ -140,7 +141,25 @@ static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color t
     }
 }
 
-static void _draw_hud()
+static void _update_camera(bool lerp)
 {
+    Vector2 target = {
+        player->position.x - player->sprite->origin.x,
+        player->position.y - player->sprite->origin.y
+    };
 
+    if (lerp)
+    {
+        camera.target = (Vector2) {
+            floorf(Lerp(camera.target.x, target.x, 0.1)),
+            floorf(Lerp(camera.target.y, target.y, 0.1))
+        };
+    }
+    else
+    {
+        camera.target = (Vector2) {
+            floorf(target.x),
+            floorf(target.y)
+        };
+    }
 }

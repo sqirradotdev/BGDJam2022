@@ -2,7 +2,7 @@
 
 #include <raylib.h>
 
-#define ALLOC_STEP 2
+#define ALLOC_STEP 10
 
 static void _list_alloc_more(List* list);
 

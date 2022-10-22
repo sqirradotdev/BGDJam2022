@@ -68,7 +68,7 @@ void player_update(Player* player, struct layerInstances* map_col_layer)
         _change_player_state(player, PLAYER_IDLE);
     }
 
-    bool trying_to_jump = IsKeyPressed(KEY_SPACE);
+    bool trying_to_jump = IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_Z);
 
     temp_velocity.y += GRAVITY;
     if (fabs(temp_velocity.y) > PLAYER_TERMINAL_VELOCITY)

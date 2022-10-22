@@ -26,6 +26,9 @@ add_executable(src
     player.h
     player.c
 
+    chests.h
+    chests.c
+
     hud.h
     hud.c
 )
