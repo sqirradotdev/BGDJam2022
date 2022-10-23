@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <raymath.h>
 
 #include "constants.h"
 
@@ -41,8 +42,12 @@ void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** cr
 
     if (mouse_down)
         temp_velocity = mouse_vel;
+    else
+        temp_velocity = (Vector2) { 0.0, 0.0 };
 
     _begin_update_physics(crate->current_rect, &temp_position, &temp_velocity);
+    temp_position.x += temp_velocity.x;
+    temp_position.y += temp_velocity.y;
     for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
     {
         Rectangle tile_rect = {
@@ -67,8 +72,7 @@ void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** cr
             break;
     }
 
-    temp_position.x += temp_velocity.x;
-    temp_position.y += temp_velocity.y;
+    
 
     crate->position = temp_position;
     crate->velocity = temp_velocity;
@@ -106,14 +110,16 @@ static void _begin_update_physics(Rectangle crate_rect, Vector2* position, Vecto
 
 static bool _update_physics(Crate* player, Rectangle other_rect, Vector2* position, Vector2* velocity)
 {
+    Vector2 normalized = Vector2Normalize(*velocity);
+
     if (CheckCollisionRecs(cur_crate_future_x, other_rect))
     {
         Rectangle col_rec = GetCollisionRec(cur_crate_future_x, other_rect);
 
-        if (velocity->x > 0.0)
-            position->x -= col_rec.width;
+        if (normalized.x > 0.0)
+            position->x -= col_rec.width * fabsf(normalized.x);
         else
-            position->x += col_rec.width;
+            position->x += col_rec.width * fabsf(normalized.x);
 
         velocity->x = 0.0;
 
@@ -124,7 +130,7 @@ static bool _update_physics(Crate* player, Rectangle other_rect, Vector2* positi
     {
         Rectangle col_rec = GetCollisionRec(cur_crate_future_y, other_rect);
 
-        if (velocity->y > 0.0)
+        if (normalized.y > 0.0)
             position->y -= col_rec.height;
         else
             position->y += col_rec.height;

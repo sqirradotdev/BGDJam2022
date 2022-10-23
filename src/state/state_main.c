@@ -128,8 +128,7 @@ void state_main_draw()
         DrawRectangle(0, 0, INIT_VIEWPORT_WIDTH, INIT_VIEWPORT_HEIGHT, (Color) { 35, 30, 46, 255 });
 
     BeginMode2D(camera);
-        if (current_level != 0)
-            _draw_tiles(level_bg, map_texture, WHITE);
+        _draw_tiles(level_bg, map_texture, WHITE);
         _draw_tiles(level_col, map_texture, WHITE);
         _draw_tiles(level_lantern_chains, map_texture, WHITE);
         _draw_tiles(level_lanterns, map_texture, WHITE);
