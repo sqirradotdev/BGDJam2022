@@ -4,9 +4,11 @@
 #include "../constants.h"
 #include "../state/state.h"
 
-Rectangle viewport_src_rect;
-Rectangle viewport_dst_rect;
-RenderTexture2D viewport;
+extern bool gameloop_pixel_mode = true;
+
+static Rectangle viewport_src_rect;
+static Rectangle viewport_dst_rect;
+static RenderTexture2D viewport;
 
 bool gameloop_init()
 {
@@ -35,14 +37,23 @@ bool gameloop_loop()
         // Update
         state_update();
 
-        // Render
-        BeginTextureMode(viewport);
-            state_draw();
-        EndTextureMode();
+        if (gameloop_pixel_mode)
+        {
+            // Render
+            BeginTextureMode(viewport);
+                state_draw();
+            EndTextureMode();
 
-        BeginDrawing();
-            DrawTexturePro(viewport.texture, viewport_src_rect, viewport_dst_rect, (Vector2) { 0.0, 0.0 }, 0.0, WHITE);
-        EndDrawing();
+            BeginDrawing();
+                DrawTexturePro(viewport.texture, viewport_src_rect, viewport_dst_rect, (Vector2) { 0.0, 0.0 }, 0.0, WHITE);
+            EndDrawing();
+        }
+        else
+        {
+            BeginDrawing();
+                state_draw();
+            EndDrawing();
+        }
     }
 
     return true;
@@ -58,5 +69,8 @@ void gameloop_clean()
 
 Vector2 gameloop_get_viewport_size()
 {
-    return (Vector2) { INIT_VIEWPORT_WIDTH, INIT_VIEWPORT_HEIGHT };
+    if (gameloop_pixel_mode)
+        return (Vector2) { viewport.texture.width, viewport.texture.height };
+
+    return (Vector2) { INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT };
 }

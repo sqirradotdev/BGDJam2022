@@ -4,6 +4,7 @@
 typedef enum
 {
     STATE_NONE,
+    STATE_SPLASH,
     STATE_MENU,
     STATE_MAIN
 } State;

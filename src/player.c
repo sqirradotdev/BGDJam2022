@@ -33,6 +33,8 @@ Player* player_new(PlayerCharacter player_character)
 
     player->state = PLAYER_IDLE;
 
+    player->level_size = (Vector2) { 100.0, 100.0 };
+
     player->current_frame = 0;
     player->frames_counter = 0;
     player->frame_speed = 8;
@@ -127,6 +129,27 @@ void player_update(Player* player, struct layerInstances* map_col_layer)
 
             temp_velocity.y = 0.0;
         }
+    }
+
+    if (temp_position.x < 0.0)
+    {
+        temp_position.x = 0.0;
+        temp_velocity.x = 0.0;
+    }
+    if (temp_position.x > player->level_size.x)
+    {
+        temp_position.x = player->level_size.x;
+        temp_velocity.x = 0.0;
+    }
+    if (temp_position.y < 0.0)
+    {
+        temp_position.y = 0.0;
+        temp_velocity.y = 0.0;
+    }
+    if (temp_position.y > player->level_size.y)
+    {
+        temp_position.y = player->level_size.y;
+        temp_velocity.y = 0.0;
     }
 
     temp_position.x += temp_velocity.x;

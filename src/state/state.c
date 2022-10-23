@@ -2,6 +2,7 @@
 
 #include <raylib.h>
 
+#include "state_splash.h"
 #include "state_menu.h"
 #include "state_main.h"
 
@@ -24,7 +25,7 @@ void state_restart()
 
 void state_init()
 {
-    state_switchto(STATE_MENU);
+    state_switchto(STATE_MAIN);
 }
 
 void state_update()
@@ -33,6 +34,7 @@ void state_update()
 
     switch (current_state)
     {
+        case STATE_SPLASH:  state_splash_update();  break;
         case STATE_MENU:    state_menu_update();    break;
         case STATE_MAIN:    state_main_update();    break;
         default: break;
@@ -43,6 +45,7 @@ void state_draw()
 {
     switch (current_state)
     {
+        case STATE_SPLASH:  state_splash_draw();    break;
         case STATE_MENU:    state_menu_draw();      break;
         case STATE_MAIN:    state_main_draw();      break;
         default: break;
@@ -58,6 +61,7 @@ void _enter_state(State state)
 {
     switch (state)
     {
+        case STATE_SPLASH:  state_splash_enter();   break;
         case STATE_MENU:    state_menu_enter();     break;
         case STATE_MAIN:    state_main_enter();     break;
         default: break;
@@ -68,6 +72,7 @@ void _exit_state(State state)
 {
     switch (state)
     {
+        case STATE_SPLASH:  state_splash_exit();    break;
         case STATE_MENU:    state_menu_exit();      break;
         case STATE_MAIN:    state_main_exit();      break;
         default: break;

@@ -26,6 +26,8 @@ typedef struct Player
 
     enum { PLAYER_IDLE, PLAYER_MOVING } state;
 
+    Vector2 level_size;
+
     int current_frame;
     int frames_counter;
     int frame_speed;

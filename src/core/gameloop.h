@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <raylib.h>
 
+extern bool gameloop_pixel_mode;
+
 bool gameloop_init();
 bool gameloop_loop();
 void gameloop_clean();

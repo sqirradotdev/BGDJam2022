@@ -20,6 +20,8 @@ add_executable(src
 
     state/state.h
     state/state.c
+    state/state_splash.h
+    state/state_splash.c
     state/state_menu.h
     state/state_menu.c
     state/state_main.h
@@ -27,6 +29,9 @@ add_executable(src
 
     player.h
     player.c
+
+    crate.c
+    crate.h
 
     chests.h
     chests.c
