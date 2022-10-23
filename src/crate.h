@@ -5,6 +5,8 @@
 
 #include "cLDtk.h"
 
+#define CRATE_TERMINAL_VELOCITY 4
+
 typedef enum
 {
     CRATE_SMALL,
@@ -23,7 +25,7 @@ typedef struct Crate
 } Crate;
 
 Crate* crate_new(CrateType type);
-void crate_update(Crate* crate, struct layerInstances* map_col_layer);
+void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size, bool mouse_down, Vector2 mouse_vel);
 void crate_draw(Crate* crate);
 void crate_destroy(Crate* crate);
 

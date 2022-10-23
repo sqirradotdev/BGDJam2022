@@ -33,7 +33,13 @@ static struct entityInstances *level_chests;
 static struct entityInstances *level_crates_big;
 static int current_level = 1;
 
-static List* crate_list;
+#define CRATE_INIT_LENGTH 64
+static Crate* crate_list[CRATE_INIT_LENGTH];
+static int crate_count = 0;
+
+static Vector2 mouse_pos;
+static Vector2 prev_mouse_pos;
+static Vector2 mouse_vel;
 
 Player* player;
 HUD* hud;
@@ -64,13 +70,19 @@ void state_main_enter()
     level_chests = getEntity("chest", level->uid);
     level_crates_big = getEntity("crate_big", level->uid);
 
-    crate_list = list_new();
-    for (int i = 0; i < level_crates_big->size; i++)
+    for (int i = 0; i < CRATE_INIT_LENGTH; i++)
     {
-        Crate* crate = crate_new(CRATE_BIG);
-        crate->texture = map_texture;
-        crate->position = (Vector2) { level_crates_big[i].x, level_crates_big[i].y };
-        list_push(crate_list, crate);
+        if (i < level_crates_big->size)
+        {
+            Crate* crate = crate_new(CRATE_BIG);
+            crate->texture = map_texture;
+            crate->position = (Vector2) { level_crates_big[i].x, level_crates_big[i].y };
+            crate_list[i] = crate;
+
+            crate_count++;
+        }
+        else
+            crate_list[i] = NULL;
     }
 
     player = player_new(PLAYERCHAR_0);
@@ -94,20 +106,32 @@ void state_main_update()
 {
     UpdateMusicStream(bgm);
 
+    mouse_pos = GetMousePosition();
+    mouse_pos.x *= ((float)INIT_VIEWPORT_WIDTH / (float)INIT_WINDOW_WIDTH);
+    mouse_pos.x += camera.target.x - camera.offset.x;
+    mouse_pos.y *= ((float)INIT_VIEWPORT_HEIGHT / (float)INIT_WINDOW_HEIGHT);
+    mouse_pos.y += camera.target.y - camera.offset.y;
+
+    mouse_vel = (Vector2) { mouse_pos.x - prev_mouse_pos.x, mouse_pos.y - prev_mouse_pos.y };
+
     if (IsKeyPressed(KEY_R))
         state_restart();
 
     if (IsKeyPressed(KEY_F2))
         debug_overlay = !debug_overlay;
 
-    player_update(player, level_col);
-    for (int i = 0; i < crate_list->length; i++)
+    player_update(player, level_col, crate_list, crate_count);
+    for (int i = 0; i < crate_count; i++)
     {
-        crate_update((Crate*)crate_list->elements[i], level_col);
+        if (crate_list[i] == NULL)
+            continue;
+        crate_update(crate_list[i], level_col, crate_list, crate_count, IsMouseButtonDown(0), mouse_vel);
     }
     hud_update(hud);
 
     _update_camera(true);
+
+    prev_mouse_pos = mouse_pos;
 }
 
 void state_main_draw()
@@ -130,9 +154,11 @@ void state_main_draw()
         _draw_tiles(level_lantern_chains, map_texture, WHITE);
         _draw_tiles(level_lanterns, map_texture, WHITE);
         _draw_tiles(level_spikes, map_texture, WHITE);
-        for (int i = 0; i < crate_list->length; i++)
+        for (int i = 0; i < crate_count; i++)
         {
-            crate_draw((Crate*)crate_list->elements[i]);
+            if (crate_list[i] == NULL)
+                continue;
+            crate_draw(crate_list[i]);
         }
         player_draw(player);
     EndMode2D();
@@ -167,11 +193,25 @@ void state_main_draw()
             TextFormat("vel %s", formatter_vector2(player->velocity)), (Vector2) {0.0, 20.0},
             (Vector2) {0.0, 0.0}, 0, gr_small_font.baseSize, 0, WHITE
         );
+
+        DrawTextPro(gr_small_font,
+            TextFormat("world mouse %s", formatter_vector2(mouse_pos)), (Vector2) {0.0, 30.0},
+            (Vector2) {0.0, 0.0}, 0, gr_small_font.baseSize, 0, WHITE
+        );
     }
 }
 
 void state_main_exit()
 {
+    for (int i = 0; i < crate_count; i++)
+    {
+        if (crate_list[i] != NULL)
+        {
+            crate_destroy(crate_list[i]);
+            crate_list[i] = NULL;
+        }
+    }
+
     UnloadMusicStream(bgm);
     player_destroy(player);
     hud_destroy(hud);

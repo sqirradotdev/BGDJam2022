@@ -4,6 +4,7 @@
 #include <raylib.h>
 
 #include "core/sprite.h"
+#include "crate.h"
 #include "cLDtk.h"
 
 #define PLAYER_ACCEL_SPEED 0.08
@@ -35,12 +36,13 @@ typedef struct Player
     unsigned int max_hp;
     unsigned int hp;
 
+    bool touching_ground;
     bool jump_used;
     bool dash_used;
 } Player;
 
 Player* player_new(PlayerCharacter player_character);
-void player_update(Player* player, struct layerInstances* map_col_layer);
+void player_update(Player* player, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size);
 void player_draw(Player* player);
 void player_destroy(Player* player);
 

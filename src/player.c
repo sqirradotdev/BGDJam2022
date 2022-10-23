@@ -6,6 +6,14 @@
 
 #include "constants.h"
 
+static Rectangle cur_player_rect;
+static Rectangle cur_player_future_x;
+static Rectangle cur_player_future_y;
+static bool cur_collided_x = false;
+static bool cur_collided_y = false;
+
+static void _begin_update_physics(Vector2* position, Vector2* velocity);
+static bool _update_physics(Player* player, Rectangle other_rect, Vector2* position, Vector2* velocity, bool* touching_ground);
 static void _change_player_state(Player* player, int state);
 
 Player* player_new(PlayerCharacter player_character)
@@ -39,13 +47,14 @@ Player* player_new(PlayerCharacter player_character)
     player->frames_counter = 0;
     player->frame_speed = 8;
 
+    player->touching_ground = false;
     player->jump_used = false;
     player->dash_used = false;
 
     return player;
 }
 
-void player_update(Player* player, struct layerInstances* map_col_layer)
+void player_update(Player* player, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size)
 {
     Vector2 temp_velocity = player->velocity;
     Vector2 temp_position = player->position;
@@ -64,107 +73,81 @@ void player_update(Player* player, struct layerInstances* map_col_layer)
     else
     {
         // deaccel
-        if (fabs(temp_velocity.x) > 0.5)
+        if (fabs(temp_velocity.x) > 0.5f)
             temp_velocity.x += PLAYER_DEACCEL_SPEED * -copysignf(1.0, temp_velocity.x);
         else
-            temp_velocity.x = 0.0;
+            temp_velocity.x = 0.0f;
 
         _change_player_state(player, PLAYER_IDLE);
     }
 
-    temp_velocity.y += GRAVITY;
-    if (fabs(temp_velocity.y) > PLAYER_TERMINAL_VELOCITY)
-        temp_velocity.y = PLAYER_TERMINAL_VELOCITY * copysignf(1.0, temp_velocity.y);
-
-    // temp_position.x += temp_velocity.x;
-    // temp_position.y += temp_velocity.y;
-
-    Rectangle player_rect = {
-        temp_position.x - 6,
-        temp_position.y - 14,
-        12,
-        14
-    };
-
-    Rectangle future_x = { player_rect.x + temp_velocity.x, player_rect.y, player_rect.width, player_rect.height };
-    Rectangle future_y = { player_rect.x, player_rect.y + temp_velocity.y, player_rect.width, player_rect.height };
-
-    bool touching_ground = false;
-    for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
+    if (Vector2Length(temp_velocity) > 0.0)
     {
-        Rectangle tile_rect = {
-            (float)map_col_layer->autoTiles_data_ptr[y].x,
-            (float)map_col_layer->autoTiles_data_ptr[y].y,
-            TILE_OFFSET,
-            TILE_OFFSET
-        };
+        temp_velocity.y += GRAVITY;
+        if (fabs(temp_velocity.y) > PLAYER_TERMINAL_VELOCITY)
+            temp_velocity.y = PLAYER_TERMINAL_VELOCITY * copysignf(1.0f, temp_velocity.y);
 
-        if (CheckCollisionRecs(future_x, tile_rect))
+        // temp_position.x += temp_velocity.x;
+        // temp_position.y += temp_velocity.y;
+
+        player->touching_ground = false;
+        _begin_update_physics(&temp_position, &temp_velocity);
+        for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
         {
-            Rectangle col_rec = GetCollisionRec(future_x, tile_rect);
+            Rectangle tile_rect = {
+                (float)map_col_layer->autoTiles_data_ptr[y].x,
+                (float)map_col_layer->autoTiles_data_ptr[y].y,
+                TILE_OFFSET,
+                TILE_OFFSET
+            };
 
-            //temp_position.x += temp_velocity.x;
+            if (_update_physics(player, tile_rect, &temp_position, &temp_velocity, &player->touching_ground))
+                break;
+        }
+        for (int i = 0; i < crate_size; i++)
+        {
+            if (crates_ptr[i] == NULL)
+                continue;
 
-            if (temp_velocity.x > 0.0)
-                temp_position.x -= col_rec.width;
-            else
-                temp_position.x += col_rec.width;
+            if (_update_physics(player, crates_ptr[i]->current_rect, &temp_position, &temp_velocity, &player->touching_ground))
+                break;
+        }
 
+        if (temp_position.x < 0.0)
+        {
+            temp_position.x = 0.0;
             temp_velocity.x = 0.0;
         }
-
-        if (CheckCollisionRecs(future_y, tile_rect))
+        if (temp_position.x > player->level_size.x)
         {
-            Rectangle col_rec = GetCollisionRec(future_y, tile_rect);
-
-            //temp_position.y += temp_velocity.y;
-
-            if (temp_velocity.y > 0.0)
-            {
-                temp_position.y -= col_rec.height;
-                touching_ground = true;
-            }
-            else
-                temp_position.y += col_rec.height;
-
+            temp_position.x = player->level_size.x;
+            temp_velocity.x = 0.0;
+        }
+        if (temp_position.y < 0.0)
+        {
+            temp_position.y = 0.0;
             temp_velocity.y = 0.0;
         }
-    }
+        if (temp_position.y > player->level_size.y)
+        {
+            temp_position.y = player->level_size.y;
+            temp_velocity.y = 0.0;
+        }
 
-    if (temp_position.x < 0.0)
-    {
-        temp_position.x = 0.0;
-        temp_velocity.x = 0.0;
+        temp_position.x += temp_velocity.x;
+        temp_position.y += temp_velocity.y;
     }
-    if (temp_position.x > player->level_size.x)
-    {
-        temp_position.x = player->level_size.x;
-        temp_velocity.x = 0.0;
-    }
-    if (temp_position.y < 0.0)
-    {
-        temp_position.y = 0.0;
-        temp_velocity.y = 0.0;
-    }
-    if (temp_position.y > player->level_size.y)
-    {
-        temp_position.y = player->level_size.y;
-        temp_velocity.y = 0.0;
-    }
-
-    temp_position.x += temp_velocity.x;
-    temp_position.y += temp_velocity.y;
 
     bool jump_pressed = IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_Z);
     bool jump_released = IsKeyReleased(KEY_SPACE) || IsKeyReleased(KEY_Z);
     if (player->jump_used && jump_released)
         player->jump_used = false;
 
-    if (touching_ground)
+    if (player->touching_ground)
     {
         if (jump_pressed && !player->jump_used)
         {
-            temp_velocity.y = -3.5;
+            temp_velocity.y = -4.25f;
             player->jump_used = true;
         }
     }
@@ -208,6 +191,62 @@ void player_destroy(Player* player)
 {
     sprite_destroy(player->sprite);
     free(player);
+}
+
+static void _begin_update_physics(Vector2* position, Vector2* velocity)
+{
+    cur_collided_x = false;
+    cur_collided_y = false;
+
+    cur_player_rect = (Rectangle) {
+        position->x - 6,
+        position->y - 14,
+        12,
+        14
+    };
+
+    cur_player_future_x = (Rectangle) { cur_player_rect.x + velocity->x, cur_player_rect.y, cur_player_rect.width, cur_player_rect.height };
+    cur_player_future_y = (Rectangle) { cur_player_rect.x, cur_player_rect.y + velocity->y, cur_player_rect.width, cur_player_rect.height };
+}
+
+static bool _update_physics(Player* player, Rectangle other_rect, Vector2* position, Vector2* velocity, bool* touching_ground)
+{
+    if (CheckCollisionRecs(cur_player_future_x, other_rect))
+    {
+        Rectangle col_rec = GetCollisionRec(cur_player_future_x, other_rect);
+
+        //temp_position.x += temp_velocity.x;
+
+        if (velocity->x > 0.0f)
+            position->x -= col_rec.width;
+        else
+            position->x += col_rec.width;
+
+        velocity->x = 0.0f;
+
+        cur_collided_x = true;
+    }
+
+    if (CheckCollisionRecs(cur_player_future_y, other_rect))
+    {
+        Rectangle col_rec = GetCollisionRec(cur_player_future_y, other_rect);
+
+        //temp_position.y += temp_velocity.y;
+
+        if (velocity->y > 0.0f)
+        {
+            position->y -= col_rec.height;
+            *touching_ground = true;
+        }
+        else
+            position->y += col_rec.height;
+
+        velocity->y = 0.0f;
+
+        cur_collided_y = true;
+    }
+
+    return cur_collided_x && cur_collided_y;
 }
 
 static void _change_player_state(Player* player, int state)
