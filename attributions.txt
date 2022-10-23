@@ -5,10 +5,12 @@ Font:
 Library:
   - raylib • Ramon Santamaria • https://www.raylib.com/index.html • zlib License
   - cLDtk • PompPenguin • https://github.com/PompPenguin/cLDtk/ • MIT License
-  - Physac • victorfisac • https://github.com/victorfisac/Physac • MIT License
 
 Software:
   - Visual Studio Code • Microsoft • https://code.visualstudio.com/
   - BMFont • AngelCode • https://www.angelcode.com/products/bmfont/
   - OpenMPT • ModPlug Central • https://openmpt.org/
   - LDtk • Deepnight Games • https://ldtk.io/
+  - GIMP • The GIMP Team • https://www.gimp.org/
+  - Audacity • Audacity • https://www.audacityteam.org/
+  - ChipTone • SFB Games • https://sfbgames.com/chiptone/
