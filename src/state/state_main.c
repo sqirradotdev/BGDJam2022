@@ -118,6 +118,9 @@ void state_main_update()
 
     mouse_vel = (Vector2) { mouse_pos.x - prev_mouse_pos.x, mouse_pos.y - prev_mouse_pos.y };
 
+    // if (IsKeyPressed(KEY_ESCAPE))
+    //     state_main_game_over();
+
     if (IsKeyPressed(KEY_R))
         player->position = player->respawn_position;
 

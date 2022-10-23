@@ -24,6 +24,7 @@ static void _set_logo();
 
 void state_splash_enter()
 {
+    faster = false;
     current_logo = 0;
 
     gameloop_pixel_mode = false;
