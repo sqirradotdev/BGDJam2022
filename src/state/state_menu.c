@@ -27,6 +27,8 @@ static void _on_fade_tween_finished(void);
 
 void state_menu_enter()
 {
+    selected = false;
+
     Vector2 text1m = MeasureTextEx(gr_medium_font, text1s, gr_medium_font.baseSize, 0);
     text1p = (Vector2) { floorf((INIT_VIEWPORT_WIDTH - text1m.x) * 0.5), 20 };
 
@@ -84,6 +86,8 @@ void state_menu_exit()
 {
     UnloadMusicStream(bgm);
     tween_destroy(fade_tween);
+    fade_tween = NULL;
+    fade_alpha_progress = 0.0;
 }
 
 static void _on_fade_tween_finished(void)

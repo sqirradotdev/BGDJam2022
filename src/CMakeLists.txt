@@ -33,8 +33,8 @@ add_executable(src
     crate.c
     crate.h
 
-    chests.h
-    chests.c
+    chest.h
+    chest.c
 
     hud.h
     hud.c

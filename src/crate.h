@@ -25,7 +25,7 @@ typedef struct Crate
 } Crate;
 
 Crate* crate_new(CrateType type);
-void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size, bool mouse_down, Vector2 mouse_vel);
+void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size, bool mouse_down, Vector2 mouse_pos, Vector2 mouse_vel);
 void crate_draw(Crate* crate);
 void crate_destroy(Crate* crate);
 

@@ -24,6 +24,8 @@ static void _set_logo();
 
 void state_splash_enter()
 {
+    current_logo = 0;
+
     gameloop_pixel_mode = false;
 
     viewport_size = gameloop_get_viewport_size();

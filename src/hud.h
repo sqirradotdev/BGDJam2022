@@ -10,6 +10,7 @@ typedef struct HUD
 {
     Player* player;
     Texture2D hearts_texture;
+    Texture2D keys_texture;
 
     int h_blink_frames_counter;
 } HUD;
