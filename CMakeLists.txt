@@ -4,7 +4,7 @@ project(BGDJam2022 VERSION 1.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11) # Requires C11 standard
 if (MINGW)
-    add_compile_options(-Wall -mwindows)
+    add_compile_options(-O0 -Wall -mwindows)
 endif()
 
 set(RAYLIB_VERSION 4.2.0)
@@ -19,7 +19,6 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     FetchContent_MakeAvailable(raylib)
 endif()
 add_subdirectory(extern/cLDtk)
-add_subdirectory(extern/Physac)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/build/debug/")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/build/release/")

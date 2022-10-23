@@ -18,6 +18,8 @@ static Vector2 viewport_size;
 
 static int frames_timer = 0;
 
+static bool faster = false;
+
 static void _set_logo();
 
 void state_splash_enter()
@@ -35,6 +37,9 @@ void state_splash_enter()
 
 void state_splash_update()
 {
+    if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE))
+        faster = true;
+
     if (frames_timer > 120)
     {
         frames_timer = 0;
@@ -47,7 +52,7 @@ void state_splash_update()
     }
 
     current_tint = (Color) { 255, 255, 255, (fabs(sin((frames_timer / 60.0) * PI * 0.5)) * 255) };
-    frames_timer++;
+    frames_timer += faster ? 2 : 1;
 }
 
 void state_splash_draw()

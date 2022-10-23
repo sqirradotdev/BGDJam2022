@@ -6,16 +6,18 @@
 #include "../constants.h"
 #include "../global_resources.h"
 #include "state.h"
+#include "state_main.h"
 #include "../core/sprite.h"
 #include "../core/tween.h"
 
-static const char* message = "Press SPACE to switch to state_main";
-static Vector2 textPos;
+static const char* text1s = "CHOOSE YOUR CHARACTER";
+static Vector2 text1p;
+
+static const char* text2s = "(pick with arrow key)";
+static Vector2 text2p;
 
 static Tween* fade_tween;
 static float fade_alpha_progress = 1;
-
-static Tween* bruhtween;
 
 static Music bgm;
 
@@ -25,15 +27,15 @@ static void _on_fade_tween_finished(void);
 
 void state_menu_enter()
 {
-    Vector2 measure = MeasureTextEx(gr_small_font, message, gr_medium_font.baseSize, 0);
-    textPos = (Vector2) { floorf((INIT_VIEWPORT_WIDTH - measure.x) * 0.5), floorf((INIT_VIEWPORT_HEIGHT - measure.y) * 0.5) };
+    Vector2 text1m = MeasureTextEx(gr_medium_font, text1s, gr_medium_font.baseSize, 0);
+    text1p = (Vector2) { floorf((INIT_VIEWPORT_WIDTH - text1m.x) * 0.5), 20 };
+
+    Vector2 text2m = MeasureTextEx(gr_small_font, text2s, gr_medium_font.baseSize, 0);
+    text2p = (Vector2) { floorf((INIT_VIEWPORT_WIDTH - text2m.x) * 0.5), 30 };
 
     fade_tween = tween_new(&fade_alpha_progress, 1, 0, 2, EASE_LINEAR);
     fade_tween->on_tween_finished_ptr = &_on_fade_tween_finished;
     tween_start(fade_tween);
-
-    bruhtween = tween_new(&textPos.y, 0, textPos.y, 2, EASE_OUT_BOUNCE);
-    tween_start(bruhtween);
 
     bgm = LoadMusicStream("./resources/bgm/i_have_a_vision.xm");
     PlayMusicStream(bgm);
@@ -47,7 +49,15 @@ void state_menu_update()
 
     if (!selected)
     {
-        if (IsKeyPressed(KEY_SPACE))
+        bool left_sel = IsKeyPressed(KEY_LEFT);
+        bool right_sel = IsKeyPressed(KEY_RIGHT);
+
+        if (left_sel)
+            chosen_character = 0;
+        else if (right_sel)
+            chosen_character = 1;
+
+        if (left_sel || right_sel)
         {
             //state_switchto(STATE_MAIN);
             selected = true;
@@ -59,13 +69,13 @@ void state_menu_update()
     }
 
     tween_update(fade_tween);
-    tween_update(bruhtween);
 }
 
 void state_menu_draw()
 {
     ClearBackground(BLACK);
-    DrawTextEx(gr_small_font, message, textPos, gr_medium_font.baseSize, 0, WHITE);
+    DrawTextEx(gr_medium_font, text1s, text1p, gr_medium_font.baseSize, 0, WHITE);
+    DrawTextEx(gr_small_font, text2s, text2p, gr_medium_font.baseSize, 0, WHITE);
     if (fade_alpha_progress != 0)
         DrawRectangle(0, 0, INIT_VIEWPORT_WIDTH, INIT_VIEWPORT_HEIGHT, (Color) { 0, 0, 0, (unsigned char)(fade_alpha_progress * 255) });
 }

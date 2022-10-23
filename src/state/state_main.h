@@ -6,4 +6,6 @@ void state_main_update();
 void state_main_draw();
 void state_main_exit();
 
+extern int chosen_character;
+
 #endif

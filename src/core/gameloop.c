@@ -4,7 +4,7 @@
 #include "../constants.h"
 #include "../state/state.h"
 
-extern bool gameloop_pixel_mode = true;
+bool gameloop_pixel_mode = true;
 
 static Rectangle viewport_src_rect;
 static Rectangle viewport_dst_rect;

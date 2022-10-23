@@ -25,7 +25,7 @@ void state_restart()
 
 void state_init()
 {
-    state_switchto(STATE_MAIN);
+    state_switchto(STATE_SPLASH);
 }
 
 void state_update()

@@ -15,7 +15,8 @@
 #include "../core/sprite.h"
 
 #include "cLDtk.h"
-#include "physac.h"
+
+int chosen_character;
 
 // Textures
 static Texture2D sky_texture;
@@ -31,7 +32,8 @@ static struct layerInstances *level_spikes;
 static struct entityInstances *level_players;
 static struct entityInstances *level_chests;
 static struct entityInstances *level_crates_big;
-static int current_level = 1;
+static int current_level = 0;
+static bool level_loaded = false;
 
 #define CRATE_INIT_LENGTH 64
 static Crate* crate_list[CRATE_INIT_LENGTH];
@@ -41,14 +43,15 @@ static Vector2 mouse_pos;
 static Vector2 prev_mouse_pos;
 static Vector2 mouse_vel;
 
-Player* player;
-HUD* hud;
-Camera2D camera = { 0 };
+static Player* player;
+static HUD* hud;
+static Camera2D camera = { 0 };
 
 static Music bgm;
 
 static bool debug_overlay = true;
 
+static void _load_level();
 static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color tint);
 static void _update_camera(bool lerp);
 
@@ -60,30 +63,7 @@ void state_main_enter()
     loadJSONFile("{\"jsonVersion\":\"\"}", "./resources/maps/map.json");
     importMapData();
 
-    level = getLevel(TextFormat("level%i", current_level));
-    level_bg = getLayer("bg", level->uid);
-    level_col = getLayer("col", level->uid);
-    level_lantern_chains = getLayer("lantern_data", level->uid);
-    level_lanterns = getLayer("lantern", level->uid);
-    level_spikes = getLayer("spike", level->uid);
-    level_players = getEntity("player", level->uid);
-    level_chests = getEntity("chest", level->uid);
-    level_crates_big = getEntity("crate_big", level->uid);
-
-    for (int i = 0; i < CRATE_INIT_LENGTH; i++)
-    {
-        if (i < level_crates_big->size)
-        {
-            Crate* crate = crate_new(CRATE_BIG);
-            crate->texture = map_texture;
-            crate->position = (Vector2) { level_crates_big[i].x, level_crates_big[i].y };
-            crate_list[i] = crate;
-
-            crate_count++;
-        }
-        else
-            crate_list[i] = NULL;
-    }
+    _load_level();
 
     player = player_new(PLAYERCHAR_0);
     player->level_size = (Vector2) { level->pxWid, level->pxHei };
@@ -162,10 +142,6 @@ void state_main_draw()
         }
         player_draw(player);
     EndMode2D();
-    // if (current_level != 0)
-    // {
-    //     DrawRectangle(0, 0, INIT_VIEWPORT_WIDTH, INIT_VIEWPORT_HEIGHT, (Color) { 0, 0, 0, 180 });
-    // }
 
     hud_draw(hud);
 
@@ -219,6 +195,39 @@ void state_main_exit()
     UnloadTexture(map_texture);
     json_value_free(schema);
     json_value_free(user_data);
+}
+
+static void _load_level()
+{
+    level = getLevel(TextFormat("level%i", current_level));
+    level_bg = getLayer("bg", level->uid);
+    level_col = getLayer("col", level->uid);
+    level_lantern_chains = getLayer("lantern_data", level->uid);
+    level_lanterns = getLayer("lantern", level->uid);
+    level_spikes = getLayer("spike", level->uid);
+    level_players = getEntity("player", level->uid);
+    level_chests = getEntity("chest", level->uid);
+    level_crates_big = getEntity("crate_big", level->uid);
+
+    for (int i = 0; i < CRATE_INIT_LENGTH; i++)
+    {
+        if (level_loaded && crate_list[i] != NULL)
+            crate_destroy(crate_list[i]);
+
+        if (i < level_crates_big->size)
+        {
+            Crate* crate = crate_new(CRATE_BIG);
+            crate->texture = map_texture;
+            crate->position = (Vector2) { level_crates_big[i].x, level_crates_big[i].y };
+            crate_list[i] = crate;
+
+            crate_count++;
+        }
+        else
+            crate_list[i] = NULL;
+    }
+
+    level_loaded = true;
 }
 
 static void _draw_tiles(struct layerInstances *layer, Texture2D texture, Color tint)

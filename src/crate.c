@@ -27,6 +27,8 @@ Crate* crate_new(CrateType type)
         crate->current_rect = (Rectangle) { 0.0, 0.0, 16.0, 16.0 };
     else if (type == CRATE_BIG)
         crate->current_rect = (Rectangle) { 0.0, 0.0, 32.0, 32.0 };
+
+    return crate;
 }
 
 void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** crates_ptr, int crate_size, bool mouse_down, Vector2 mouse_vel)
@@ -38,15 +40,7 @@ void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** cr
     Vector2 temp_position = crate->position;
 
     if (mouse_down)
-    {
         temp_velocity = mouse_vel;
-    }
-    else
-    {
-        temp_velocity.y += GRAVITY;
-        if (fabs(temp_velocity.y) > CRATE_TERMINAL_VELOCITY)
-            temp_velocity.y = CRATE_TERMINAL_VELOCITY * copysignf(1.0, temp_velocity.y);
-    }
 
     _begin_update_physics(crate->current_rect, &temp_position, &temp_velocity);
     for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
@@ -72,27 +66,6 @@ void crate_update(Crate* crate, struct layerInstances* map_col_layer, Crate** cr
         if (_update_physics(crate, crates_ptr[i]->current_rect, &temp_position, &temp_velocity))
             break;
     }
-
-    // if (temp_position.x < 0.0)
-    // {
-    //     temp_position.x = 0.0;
-    //     temp_velocity.x = 0.0;
-    // }
-    // if (temp_position.x > player->level_size.x)
-    // {
-    //     temp_position.x = player->level_size.x;
-    //     temp_velocity.x = 0.0;
-    // }
-    // if (temp_position.y < 0.0)
-    // {
-    //     temp_position.y = 0.0;
-    //     temp_velocity.y = 0.0;
-    // }
-    // if (temp_position.y > player->level_size.y)
-    // {
-    //     temp_position.y = player->level_size.y;
-    //     temp_velocity.y = 0.0;
-    // }
 
     temp_position.x += temp_velocity.x;
     temp_position.y += temp_velocity.y;
@@ -137,8 +110,6 @@ static bool _update_physics(Crate* player, Rectangle other_rect, Vector2* positi
     {
         Rectangle col_rec = GetCollisionRec(cur_crate_future_x, other_rect);
 
-        //temp_position.x += temp_velocity.x;
-
         if (velocity->x > 0.0)
             position->x -= col_rec.width;
         else
@@ -152,8 +123,6 @@ static bool _update_physics(Crate* player, Rectangle other_rect, Vector2* positi
     if (CheckCollisionRecs(cur_crate_future_y, other_rect))
     {
         Rectangle col_rec = GetCollisionRec(cur_crate_future_y, other_rect);
-
-        //temp_position.y += temp_velocity.y;
 
         if (velocity->y > 0.0)
             position->y -= col_rec.height;
