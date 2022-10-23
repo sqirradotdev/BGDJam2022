@@ -65,7 +65,10 @@ void state_main_enter()
 
     _load_level();
 
-    player = player_new(PLAYERCHAR_0);
+    if (chosen_character == 0)
+        player = player_new(PLAYERCHAR_0);
+    else
+        player = player_new(PLAYERCHAR_1);
     player->level_size = (Vector2) { level->pxWid, level->pxHei };
     player->position = (Vector2) { level_players[0].x, level_players[0].y };
 

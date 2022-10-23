@@ -26,9 +26,13 @@ Player* player_new(PlayerCharacter player_character)
     Texture2D player_texture;
     switch (player_character)
     {
-        default:
+        case PLAYERCHAR_0:
             player_texture = LoadTexture("./resources/textures/char0.png");
             player->max_hp = 3;
+            break;
+        case PLAYERCHAR_1:
+            player_texture = LoadTexture("./resources/textures/char1.png");
+            player->max_hp = 4;
             break;
     }
 
@@ -47,6 +51,10 @@ Player* player_new(PlayerCharacter player_character)
     player->frames_counter = 0;
     player->frame_speed = 8;
 
+    player->dashing = false;
+    player->dash_direction = (Vector2) { 0.0, 0.0 };
+    player->dash_frames = 0;
+
     player->touching_ground = false;
     player->jump_used = false;
     player->dash_used = false;
@@ -59,84 +67,90 @@ void player_update(Player* player, struct layerInstances* map_col_layer, Crate**
     Vector2 temp_velocity = player->velocity;
     Vector2 temp_position = player->position;
 
-    float player_input = ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) - (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))) * PLAYER_ACCEL_SPEED;
-    if (player_input != 0)
-    {
-        // accel
-        temp_velocity.x += player_input;
-        if (fabs(temp_velocity.x) > PLAYER_MAX_SPEED)
-            temp_velocity.x = PLAYER_MAX_SPEED * copysignf(1.0, player->velocity.x);
+    if (IsKeyPressed(KEY_X))
+        player->dashing = true;
 
-        player->sprite->flip_x = (player_input < 0);
-        _change_player_state(player, PLAYER_MOVING);
-    }
-    else
+    if (!player->dashing)
     {
-        // deaccel
-        if (fabs(temp_velocity.x) > 0.5f)
-            temp_velocity.x += PLAYER_DEACCEL_SPEED * -copysignf(1.0, temp_velocity.x);
+        float player_input = ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) - (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))) * PLAYER_ACCEL_SPEED;
+        if (player_input != 0)
+        {
+            // accel
+            temp_velocity.x += player_input;
+            if (fabs(temp_velocity.x) > PLAYER_MAX_SPEED)
+                temp_velocity.x = PLAYER_MAX_SPEED * copysignf(1.0, player->velocity.x);
+
+            player->sprite->flip_x = (player_input < 0);
+            _change_player_state(player, PLAYER_MOVING);
+        }
         else
-            temp_velocity.x = 0.0f;
+        {
+            // deaccel
+            if (fabs(temp_velocity.x) > 0.5f)
+                temp_velocity.x += PLAYER_DEACCEL_SPEED * -copysignf(1.0, temp_velocity.x);
+            else
+                temp_velocity.x = 0.0f;
 
-        _change_player_state(player, PLAYER_IDLE);
-    }
+            _change_player_state(player, PLAYER_IDLE);
+        }
 
-    if (Vector2Length(temp_velocity) > 0.0)
-    {
         temp_velocity.y += GRAVITY;
         if (fabs(temp_velocity.y) > PLAYER_TERMINAL_VELOCITY)
             temp_velocity.y = PLAYER_TERMINAL_VELOCITY * copysignf(1.0f, temp_velocity.y);
-
-        // temp_position.x += temp_velocity.x;
-        // temp_position.y += temp_velocity.y;
-
-        player->touching_ground = false;
-        _begin_update_physics(&temp_position, &temp_velocity);
-        for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
-        {
-            Rectangle tile_rect = {
-                (float)map_col_layer->autoTiles_data_ptr[y].x,
-                (float)map_col_layer->autoTiles_data_ptr[y].y,
-                TILE_OFFSET,
-                TILE_OFFSET
-            };
-
-            if (_update_physics(player, tile_rect, &temp_position, &temp_velocity, &player->touching_ground))
-                break;
-        }
-        for (int i = 0; i < crate_size; i++)
-        {
-            if (crates_ptr[i] == NULL)
-                continue;
-
-            if (_update_physics(player, crates_ptr[i]->current_rect, &temp_position, &temp_velocity, &player->touching_ground))
-                break;
-        }
-
-        if (temp_position.x < 0.0)
-        {
-            temp_position.x = 0.0;
-            temp_velocity.x = 0.0;
-        }
-        if (temp_position.x > player->level_size.x)
-        {
-            temp_position.x = player->level_size.x;
-            temp_velocity.x = 0.0;
-        }
-        if (temp_position.y < 0.0)
-        {
-            temp_position.y = 0.0;
-            temp_velocity.y = 0.0;
-        }
-        if (temp_position.y > player->level_size.y)
-        {
-            temp_position.y = player->level_size.y;
-            temp_velocity.y = 0.0;
-        }
-
-        temp_position.x += temp_velocity.x;
-        temp_position.y += temp_velocity.y;
     }
+
+    // temp_position.x += temp_velocity.x;
+    // temp_position.y += temp_velocity.y;
+
+    player->touching_ground = false;
+    _begin_update_physics(&temp_position, &temp_velocity);
+    for (int y = map_col_layer->autoTiles_data_ptr->count; y-- > 0;)
+    {
+        Rectangle tile_rect = {
+            (float)map_col_layer->autoTiles_data_ptr[y].x,
+            (float)map_col_layer->autoTiles_data_ptr[y].y,
+            TILE_OFFSET,
+            TILE_OFFSET
+        };
+
+        if (_update_physics(player, tile_rect, &temp_position, &temp_velocity, &player->touching_ground))
+        {
+            
+            break;
+        }
+    }
+    for (int i = 0; i < crate_size; i++)
+    {
+        if (crates_ptr[i] == NULL)
+            continue;
+
+        if (_update_physics(player, crates_ptr[i]->current_rect, &temp_position, &temp_velocity, &player->touching_ground))
+            break;
+    }
+
+    if (temp_position.x < 0.0)
+    {
+        temp_position.x = 0.0;
+        temp_velocity.x = 0.0;
+    }
+    if (temp_position.x > player->level_size.x)
+    {
+        temp_position.x = player->level_size.x;
+        temp_velocity.x = 0.0;
+    }
+    if (temp_position.y < 0.0)
+    {
+        temp_position.y = 0.0;
+        temp_velocity.y = 0.0;
+    }
+    if (temp_position.y > player->level_size.y)
+    {
+        temp_position.y = player->level_size.y;
+        temp_velocity.y = 0.0;
+    }
+
+    temp_position.x += temp_velocity.x;
+    temp_position.y += temp_velocity.y;
 
     bool jump_pressed = IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_Z);
     bool jump_released = IsKeyReleased(KEY_SPACE) || IsKeyReleased(KEY_Z);

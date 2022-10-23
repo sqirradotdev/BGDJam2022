@@ -33,6 +33,10 @@ typedef struct Player
     int frames_counter;
     int frame_speed;
 
+    bool dashing;
+    Vector2 dash_direction;
+    int dash_frames;
+
     unsigned int max_hp;
     unsigned int hp;
 
