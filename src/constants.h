@@ -10,6 +10,6 @@
 #define INIT_WINDOW_TITLE "Where Visions Overlap"
 
 #define TILE_OFFSET 16
-#define GRAVITY 0.3
+#define GRAVITY 0.2
 
 #endif
